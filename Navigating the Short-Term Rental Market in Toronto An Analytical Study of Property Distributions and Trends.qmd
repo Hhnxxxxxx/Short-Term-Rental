@@ -1,0 +1,141 @@
+---
+title: "Navigating the Short-Term Rental Market in Toronto: An Analytical Study of Property Distributions and Trends"
+author: "Chenyiteng Han"
+date: "today"
+date-format: "long" 
+abstract: "This study offers a concise exploration of the short-term rental market in Toronto, highlighting property type preferences across different wards through data from the Open Data Toronto Portal."
+thanks: "Code and data from this analysis are available at: https://github.com/Hhnxxxxxx/Short-Term-Rental" 
+bibliography: tp1.bib
+format: pdf
+---
+
+```{r}
+#| label: load-packages
+#| include: false
+
+library(tidyverse)
+library(opendatatoronto)
+library(knitr)
+library(kableExtra)
+library(dplyr)
+library(ggplot2)
+
+```
+
+## Introduction
+
+The city of Toronto's evolving landscape is marked by a dynamic short-term rental market, which reflects broader trends in urban residence and mobility. The current analysis dissects property distributions within this market, utilizing public data to uncover patterns in housing selection. As cityscapes change and populations ebb and flow, understanding these patterns becomes crucial for stakeholders, including policymakers, urban planners, and economic analysts. This paper aims to bridge data with decision-making, offering nuanced insights into the variegated fabric of Toronto's housing market. In-depth examination of data reveals the contours of demand across wards, providing a granular look at the predilections for condominiums and houses and laying the groundwork for data-driven strategies in urban development.
+
+## Data
+
+The dataset used in this study was retrieved from the Open Data Toronto Portal (@Opendatatoronto2022), employing the Short-Term Rentals Registration data to conduct a comprehensive analysis of the short-term rental property landscape across Toronto's wards. The data extraction and cleaning were performed using R (@RCoreTeam2022), leveraging packages from the tidyverse collection (@Tidyverse2019) for data manipulation, ggplot2 (@Ggplot22016) for data visualization, opendatatoronto for direct access to Toronto's open datasets, knitr (@Knitr2014) for dynamic report generation, and kableExtra (@KableExtra2021) for enhancing the presentation of tabular outputs. The dataset's handling was conducted with rigorous attention to detail to ensure that the subsequent analysis provided accurate and reliable insights into the distribution and characteristics of short-term rental properties within the city. Details of the specific data extraction, cleaning, and analysis procedures are discussed in the subsequent sections of this paper.
+
+```{r}
+#| label: tbl-head
+#| warning: false
+#| echo: false
+
+whole_package <- list_package_resources("https://open.toronto.ca/dataset/short-term-rentals-registration/")
+my_data <- get_resource("9c235257-b09f-441e-bcad-1495607f9a82")
+selected_data <- my_data %>% select(X_id, property_type, ward_number, ward_name)
+
+my_data_head <- head(selected_data)
+my_table <- kable(my_data_head, format = "pipe", caption = "Sample of Cleaned Data") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+print(my_table)
+
+```
+
+## **Short-Term Rental Registration**
+
+This dataset, obtained from the City of Toronto's Open Data Portal (Data 2024), details short-term rental registration information on a city-wide basis. It provides insights into the distribution of short-term rentals across various wards of the city. For each entry, the dataset displays unique identifiers for the listings, the type of property being offered, and the corresponding ward number and name. The original dataset encompasses a wide range of variables, but for the purpose of our analysis, we have streamlined the data to focus on the aforementioned key attributes. This subset of data facilitates the examination of the prevalence and types of short-term rentals, enabling a focused analysis on the distribution patterns within the city's political subdivisions. The dataset is daily updated, and the sample below (see @tbl-head) has been cleaned and simplified for clarity and e
+
+The cleaning process involved the removal of extraneous columns that were not pertinent to the core objectives of our study, such as operator registration numbers and detailed address information. The remaining columns have been renamed for consistency and to enhance the interpretability of the data. The resulting cleaned dataset is poised to provide a clear overview of the short-term rental landscape across Toronto's wards.
+
+```{r}
+#| label: fig-ward
+#| warning: false
+#| echo: false
+
+grouped_data <- selected_data %>%
+  group_by(ward_name) %>%
+  summarise(count = n())
+
+ggplot(grouped_data, aes(x = ward_name, y = count)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + # 
+  labs(x = "Ward Name", y = "Registrations Count", title = "Registrations Count by Ward Name")
+
+```
+
+## **Short-Term Rental Registration Patterns across Toronto Wards**
+
+In @fig-ward, we present a compelling visual representation of the distribution of short-term rental registrations across Toronto's wards. The bar chart delineates the varying density of registrations, highlighting the wards with the most active short-term rental markets.
+
+A striking feature of this visualization is the pronounced lead of the Spadina−Fort York ward, which significantly outpaces all others in terms of registration numbers. This suggests a highly attractive market for short-term rentals, potentially driven by its prime location and accessibility to key attractions and business districts. In contrast, the Toronto Centre and University−Rosedale’s wards, while still active, show a more moderate level of registrations. Conversely, lower registration counts in other wards could reflect less transient populations or zoning regulations that impact the availability of short-term rentals.
+
+The disparity in registration volumes not only reflects the attractiveness of each area for short-term tenants but also may indicate varying degrees of regulatory environments and housing demands. This data is indispensable for policymakers and stakeholders who aim to craft nuanced, ward-specific regulations that balance the growth of the short-term rental market with the needs of permanent residents.
+
+```{r}
+#| label: fig-type
+#| warning: false
+#| echo: false
+
+grouped_data <- selected_data %>%
+  group_by(property_type) %>%
+  summarise(count = n())
+
+ggplot(grouped_data, aes(x = property_type, y = count)) +
+  geom_bar(stat = "identity", fill = "coral") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + # 
+  labs(x = "property type", y = "Registrations Count", title = "Registrations Count by Property Types")
+
+```
+
+## **Short-Term Rental Registration Patterns across Property Types**
+
+@fig-type presents a striking view of the composition of Toronto's short-term rental market by property type. The most notable observation is the prevalence of 'Condominiums' and 'Single/Semi-detached Houses', both of which exhibit a significant number of registrations. This suggests a robust demand for these types of properties among short-term renters, possibly driven by their appeal to different market segments: condominiums for those seeking urban conveniences and single/semi-detached houses for those desiring more space and privacy.
+
+In stark contrast, the categories of 'Apartment', 'Townhouse/Row House', and 'Duplex/Triplex/Fourplex' are represented to a much lesser extent. This could indicate a lower preference or availability of such property types for short-term rental purposes. The data underscores the heterogeneity of the housing market and the critical need to understand the nuances of property preference in the dynamic landscape of urban short-term rentals.
+
+```{r}
+#| label: fig-final
+#| warning: false
+#| echo: false
+
+grouped_data <- selected_data %>%
+  group_by(ward_name, property_type) %>%
+  summarise(count = n(), .groups = 'drop') %>%
+  filter(property_type %in% c("Condominium", "Single/Semi-detached House"))
+
+filtered_data <- grouped_data %>%
+  group_by(ward_name) %>%
+  summarise(total_count = sum(count)) %>%
+  filter(total_count > 250) %>%
+  select(ward_name) %>%
+  inner_join(grouped_data, by = "ward_name")
+
+ggplot(filtered_data, aes(x = ward_name, y = count, fill = property_type)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 1)) +
+  scale_fill_brewer(palette = "Set1") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  labs(x = "Ward Name", y = "Registrations Count", title = "Registrations Count by Property Type for Selected Wards") +
+  guides(fill=guide_legend(title="Property Type"))
+```
+
+## Condominiums and Single/Semi-detached Houses
+
+In the analysis of Toronto's short-term rental market, we have honed our focus on the wards with a substantial number of registrations, specifically those exceeding 250, and the two predominant property types—Condominiums and Single/Semi-detached Houses—owing to their stark numerical superiority over the other property types. @fig-final delineates this selective data, revealing notable patterns in property preferences across the wards.
+
+Spadina−Fort York and Toronto Centre emerge as exceptional cases within the dataset. These areas exhibit a remarkable preference for condominiums over houses, with Spadina−Fort York displaying an extraordinary concentration of condominium registrations that surpass 1500—a figure that is significantly higher than any other ward and property type combination within the dataset. This conspicuous trend likely reflects the urban appeal of Spadina−Fort York, suggesting a dense cluster of short-term rental activity that caters to individuals seeking the amenities and lifestyle afforded by condominium living in a central urban location.
+
+In stark contrast, the remaining wards predominantly favor Single/Semi-detached Houses, indicating a trend towards more traditional, spacious living accommodations, possibly catering to short-term renters seeking a more residential environment, perhaps with family considerations in mind. This pronounced preference for houses in the majority of wards suggests a diverse short-term rental market in Toronto, with distinct regional characteristics that could inform targeted housing policies. The disproportionate volume of condominium registrations in Spadina−Fort York, in particular, underscores the need for a nuanced understanding of local housing dynamics as they impact community composition and housing strategies in these densely populated urban areas.
+
+## Conclusion
+
+The study uncovers a pronounced preference for condominiums in urban centers, with a surprising surge in areas like Spadina−Fort York, while single/semi-detached houses prevail elsewhere. These disparities in property types reveal a multiplicity of renter needs and preferences, suggesting the necessity for diverse, adaptable housing policies in Toronto. Such insights underscore the importance of responsive urban planning to foster a sustainable and inclusive short-term rental market.
+
+## References
